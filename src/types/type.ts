@@ -45,7 +45,6 @@ export interface IProducts extends Document {
   foodType: FoodType;
   price: number;
   category: Types.ObjectId;
-  orderNo: string;
   image: {
     publicId: string;
     url: string;
