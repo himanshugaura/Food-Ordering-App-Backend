@@ -1,9 +1,10 @@
-import mongoose, { Schema, model } from "mongoose";
+import mongoose, { Model, Schema, model, type HydratedDocument } from "mongoose";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import type { IUser } from "../types/type.js";
 
+type UserDocument = HydratedDocument<IUser>;
 dotenv.config();
 const JWT_SECRET = process.env.JWT_SECRET as string;
 
@@ -70,5 +71,7 @@ UserSchema.methods.generateJWT = function () {
 };
 
 // Create and export the user model
-const UserModel = mongoose.models.User || model("User", UserSchema);
+const UserModel: Model<IUser> =
+  mongoose.models.User || model<IUser>("User", UserSchema);
 export default UserModel;
+export type { UserDocument };
