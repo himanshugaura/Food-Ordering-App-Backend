@@ -62,7 +62,7 @@ UserSchema.methods.generateJWT = function () {
   return jwt.sign(
     {
       _id: this._id,
-      username: this.userName,
+      phone: this.phone,
     },
     JWT_SECRET,
     { expiresIn: "7d" }
