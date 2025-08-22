@@ -116,7 +116,7 @@ export const getUserProfile = asyncErrorHandler(
 
     res.status(200).json({
       success: true,
-      user,
+      data : user,
     });
   }
 );
