@@ -1,5 +1,5 @@
 import { Document, Types } from 'mongoose';
-import type { FoodType, OrderStatus, PaymentMethod } from '../constants';
+import type { FoodType, OrderStatus, PaymentMethod } from '../constants.js';
 
 export interface IUser  {
   name: string;
@@ -11,7 +11,7 @@ export interface IUser  {
   generateJWT(): string;
 }
 
-export interface IAdmin  {
+export interface IAdmin extends Document {
   name: string;
   username: string;
   password: string;

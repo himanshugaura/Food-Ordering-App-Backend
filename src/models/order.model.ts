@@ -1,6 +1,6 @@
 import mongoose, { model, Schema, Types } from "mongoose";
-import type { IOrders } from "../types/type";
-import { OrderStatus, PaymentMethod } from "../constants";
+import type { IOrders } from "../types/type.js";
+import { OrderStatus, PaymentMethod } from "../constants.js";
 
 const OrdersSchema = new Schema<IOrders>(
   {
