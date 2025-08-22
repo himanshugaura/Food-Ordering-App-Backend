@@ -1,7 +1,7 @@
 import { Document, Types } from 'mongoose';
 import type { FoodType, OrderStatus, PaymentMethod } from '../constants';
 
-export interface IUser extends Document {
+export interface IUser  {
   name: string;
   phone: string;
   password: string;
@@ -11,7 +11,7 @@ export interface IUser extends Document {
   generateJWT(): string;
 }
 
-export interface IAdmin extends Document {
+export interface IAdmin  {
   name: string;
   username: string;
   password: string;
@@ -27,7 +27,7 @@ export interface IOrderItem {
   price: number;             
 }
 
-export interface IOrders extends Document {
+export interface IOrders  {
   user: Types.ObjectId;
   orderItems: IOrderItem[];  
   orderNo: number;
@@ -39,7 +39,7 @@ export interface IOrders extends Document {
   updatedAt: Date;
 }
 
-export interface IProducts extends Document {
+export interface IProducts  {
   name: string;
   description: string;
   foodType: FoodType;
@@ -53,7 +53,7 @@ export interface IProducts extends Document {
   updatedAt: Date;
 }
 
-export interface ICategory extends Document {
+export interface ICategory  {
   name: string;
   product : Types.ObjectId[];
   image : {
