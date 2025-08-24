@@ -2,6 +2,41 @@ import asyncErrorHandler from "../utils/asyncErrorHandler.js";
 import AdminModel from "../models/admin.model.js";
 import type { Request, Response } from "express";
 
+export const registerAdmin = asyncErrorHandler(
+  async (req: Request, res: Response) => {
+    const { name, username, password, secretKey } = req.body;
+
+    if (!name || !username || !password || !secretKey) {
+      return res.status(400).json({
+        success: false,
+        message: "Name, username, password and secret key are required",
+      });
+    }
+
+    if (secretKey !== process.env.ADMIN_SECRET_KEY) {
+      return res.status(403).json({
+        success: false,
+        message: "Invalid secret key",
+      });
+    }
+
+    const existingAdmin = await AdminModel.findOne({ username });
+    if (existingAdmin) {
+      return res.status(409).json({
+        success: false,
+        message: "Admin with this username already exists",
+      });
+    }
+
+    await AdminModel.create({ name, username, password });
+
+    res.status(201).json({
+      success: true,
+      message: "Admin registered successfully",
+    });
+  }
+);
+
 export const loginAdmin = asyncErrorHandler(
   async (req: Request, res: Response) => {
     const { username, password } = req.body;
