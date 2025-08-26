@@ -1,6 +1,6 @@
 import mongoose, { model, Schema } from "mongoose";
-import type { IProducts } from "../types/type";
-import { FoodType } from "../constants";
+import type { IProducts } from "../types/type.js";
+import { FoodType } from "../constants.js";
 
 const ProductsSchema = new Schema<IProducts>(
   {
