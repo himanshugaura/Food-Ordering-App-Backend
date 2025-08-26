@@ -21,6 +21,7 @@
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.17.1",
+    "multer": "^2.0.2",
     "passport": "^0.7.0",
     "socket.io": "^4.8.1"
   },
@@ -29,6 +30,7 @@
     "@types/cookie-parser": "^1.4.9",
     "@types/express": "^5.0.3",
     "@types/jsonwebtoken": "^9.0.10",
+    "@types/multer": "^2.0.0",
     "@types/node": "^24.2.0",
     "@types/passport": "^1.0.17",
     "i": "^0.3.7",
