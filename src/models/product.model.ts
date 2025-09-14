@@ -22,6 +22,10 @@ const ProductsSchema = new Schema<IProducts>(
       required: true,
     },
 
+    isAvailable : {
+      type : Boolean
+    },
+
     price: {
       type: Number,
       required: true,

@@ -4,6 +4,7 @@ import cookieParser from "cookie-parser";
 import dbConnect from "./config/database.js";
 import cors from "cors";
 import adminAuthRouter from "./routes/admin.routes.js";
+import productRouter from "./routes/menu.route.js";
 async function startServer() {
   dotenv.config();
 
@@ -35,8 +36,10 @@ async function startServer() {
     })
   );
 
-  // Routes
-  app.use("/api/admin", adminAuthRouter);
+  // Admin Routes
+  app.use("/api/admin/auth", adminAuthRouter);
+  app.use("/api/menu", productRouter);
+
 
   app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT} in ${process.env.NODE_ENV} mode`);

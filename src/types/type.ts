@@ -43,6 +43,7 @@ export interface IProducts  {
   name: string;
   description: string;
   foodType: FoodType;
+  isAvailable: Boolean;
   price: number;
   category: Types.ObjectId;
   image: {
