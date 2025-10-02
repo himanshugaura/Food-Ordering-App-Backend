@@ -11,7 +11,7 @@ export interface IUser  {
   generateJWT(): string;
 }
 
-export interface IAdmin extends Document {
+export interface IAdmin {
   name: string;
   username: string;
   password: string;
@@ -19,6 +19,19 @@ export interface IAdmin extends Document {
   updatedAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
   generateJWT(): string;
+}
+
+export interface IStore {
+  name: string;
+  address: string;
+  logo: {
+    publicId: string;
+    url: string;
+  };
+  isOpen: boolean;
+  orderCounter: number;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface IOrderItem {
