@@ -78,13 +78,6 @@ export const getAdminProfile = asyncErrorHandler(
   async (req: Request, res: Response) => {
     const adminId = req.userId;
 
-    if (!adminId) {
-      return res.status(400).json({
-        success: false,
-        message: "Admin ID is required",
-      });
-    }
-
     const admin = await AdminModel.findById(adminId).select("-password");
     if (!admin) {
       return res.status(404).json({
@@ -118,13 +111,6 @@ export const changeAdminPassword = asyncErrorHandler(
   async (req: Request, res: Response) => {
     const adminId = req.userId;
     const { currentPassword, newPassword } = req.body;
-
-    if (!adminId) {
-      return res.status(400).json({
-        success: false,
-        message: "Admin ID is required",
-      });
-    }
 
     if (!currentPassword || !newPassword) {
       return res.status(400).json({
