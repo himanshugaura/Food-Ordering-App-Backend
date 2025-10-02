@@ -4,23 +4,23 @@ import UserModel from "../models/user.model.js";
 
 export const registerUser = asyncErrorHandler(
   async (req: Request, res: Response ) => {
-    const {phone, password } = req.body; 
+    const {username, password , name} = req.body; 
 
-    if (!phone || !password) {
+    if (!username || !password || !name) {
       return res.status(400).json({
         success: false,
-        message: "Phone and password are required",
+        message: "All fields are required",
       });
     }
 
-    const existingUser = await UserModel.findOne({ phone });
+    const existingUser = await UserModel.findOne({ username });
     if (existingUser) {
       return res.status(409).json({
         success: false,
-        message: "User with this phone already exists",
+        message: "User with this username already exists",
       });
     }     
-    const user = await UserModel.create({ phone, password });
+    const user = await UserModel.create({ username, password });
     const token = user.generateJWT();
 
      res.cookie("token", token, {
@@ -39,16 +39,16 @@ export const registerUser = asyncErrorHandler(
 
 export const loginUser = asyncErrorHandler(
   async (req: Request, res: Response ) => {
-    const { phone, password } = req.body;
+    const { username, password } = req.body;
 
-    if (!phone || !password) {
+    if (!username || !password) {
       return res.status(400).json({
         success: false,
-        message: "Phone and password are required",
+        message: "username and password are required",
       });
     }
 
-  const user = await UserModel.findOne({ phone });
+  const user = await UserModel.findOne({ username });
 
     if (!user) {
       return res.status(404).json({
@@ -124,7 +124,7 @@ export const getUserProfile = asyncErrorHandler(
 export const updateUserProfile = asyncErrorHandler(
   async (req: Request, res: Response ) => {     
     const userId = req.userId;
-    const { phone, password } = req.body;
+    const { username, password , name } = req.body;
 
     if (!userId) {
       return res.status(401).json({
@@ -141,46 +141,15 @@ export const updateUserProfile = asyncErrorHandler(
       });
     }
 
-    if (phone) user.phone = phone;
+    if (username) user.username = username;
     if (password) user.password = password; 
+    if (name) user.name = name;
 
     await user.save();
 
     res.status(200).json({
       success: true,
       message: "Profile updated successfully",
-    });
-  }
-);
-
-export const deleteUserAccount = asyncErrorHandler(
-  async (req: Request, res: Response ) => {
-    const userId = req.userId;
-
-    if (!userId) {
-      return res.status(401).json({
-        success: false,
-        message: "Unauthorized",
-      });
-    }
-
-    const user = await UserModel.findByIdAndDelete(userId);
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found",
-      });
-    }
-
-    res.clearCookie("token", {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-    });
-
-    res.status(200).json({
-      success: true,
-      message: "User account deleted successfully",
     });
   }
 );

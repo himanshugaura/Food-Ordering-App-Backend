@@ -16,7 +16,7 @@ const UserSchema = new Schema<IUser>(
       trim: true,
     },
 
-    phone: {
+    username: {
       type: String,
       required: true,
       trim: true,
