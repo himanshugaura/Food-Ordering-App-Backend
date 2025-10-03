@@ -3,7 +3,6 @@ import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 dotenv.config();
 const JWT_SECRET = process.env.JWT_SECRET as string;
-const STORE_ID = process.env.STORE_ID as string;
 
 export const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
 
@@ -19,7 +18,6 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction) 
   try {
     const decoded = jwt.verify(token, JWT_SECRET) as { _id: string; phone: string };
     req.userId = decoded._id;
-    req.storeId = STORE_ID;
     next();
   } catch (err) {
     return res.status(401).json({

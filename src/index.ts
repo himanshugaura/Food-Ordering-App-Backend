@@ -5,6 +5,9 @@ import dbConnect from "./config/database.js";
 import cors from "cors";
 import adminAuthRouter from "./routes/admin.routes.js";
 import productRouter from "./routes/menu.route.js";
+import orderRouter from "./routes/order.route.js";
+import userRouter from "./routes/user.route.js";
+import storeRouter from "./routes/store.route.js";
 async function startServer() {
   dotenv.config();
 
@@ -36,9 +39,12 @@ async function startServer() {
     })
   );
 
-  // Admin Routes
+  // Routes
   app.use("/api/admin/auth", adminAuthRouter);
+  app.use("/api/user/auth", userRouter);
   app.use("/api/menu", productRouter);
+  app.use("/api/order", orderRouter);
+  app.use("/api/store", storeRouter);
 
 
   app.listen(PORT, () => {

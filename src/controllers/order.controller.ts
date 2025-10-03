@@ -12,10 +12,9 @@ configDotenv();
 export const createOrder = asyncErrorHandler(
   async (req: Request, res: Response) => {
     const userId = req.userId;
-    const storeId = process.env.STORE_ID;
     const { orderItems } = req.body;
 
-    const store = await StoreModel.findById(storeId);
+    const store = await StoreModel.findOne();
     if (!store) {
       return res.status(404).json({
         success: false,
@@ -37,11 +36,10 @@ export const createOrder = asyncErrorHandler(
       });
     }
 
-    const orderNo = await generateOrderNo(storeId!);
+    const orderNo = await generateOrderNo();
 
     const order = await OrderModel.create({
       userId,
-      storeId,
       orderNo,
       orderItems,
     });
@@ -228,7 +226,7 @@ export const getOrdersByCustomerName = asyncErrorHandler(
 export const acceptOrder = asyncErrorHandler(
   async (req: Request, res: Response) => {
      const userId = req.userId;
-    const { orderId } = req.params;
+    const  orderId  = req.params.id;
 
     const isAdmin = await AdminModel.findById(userId);
     if (!isAdmin) {
@@ -265,7 +263,7 @@ export const acceptOrder = asyncErrorHandler(
 
 export const rejectOrder = asyncErrorHandler(
   async (req: Request, res: Response) => {
-    const { orderId } = req.params;
+    const orderId = req.params.id;
 
     const order = await OrderModel.findById(orderId);
     if (!order) {

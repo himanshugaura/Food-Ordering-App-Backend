@@ -150,6 +150,34 @@ export const toggleStoreStatus = asyncErrorHandler(
   }
 );
 
+export const getOrderCounter = asyncErrorHandler(
+  async (req: Request, res: Response) => {
+    const userId = req.userId;
+
+    const isAdmin = await AdminModel.findById(userId);
+    if (!isAdmin) {
+      return res.status(403).json({
+        success: false,
+        message: "Access Denied",
+      });
+    }
+
+    const store = await StoreModel.findOne();
+    if (!store) {
+      return res.status(404).json({
+        success: false,
+        message: "Store not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Order counter fetched successfully",
+      data: { orderCounter: store.orderCounter },
+    });
+  }
+);
+
 export const resetOrderCounter = asyncErrorHandler(
   async (req: Request, res: Response) => {
     const userId = req.userId;
