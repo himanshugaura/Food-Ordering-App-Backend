@@ -129,7 +129,7 @@ export const deleteCategory = asyncErrorHandler(
       });
     }
 
-    const categoryId = req.params;
+    const categoryId = req.params.id;
 
     if (!categoryId) {
       return res.status(400).json({
@@ -260,3 +260,23 @@ export const updateProduct = asyncErrorHandler(
   }
 );
 
+export const getProductsByCategory = asyncErrorHandler(
+  async (req: Request, res: Response) => {
+    const categoryId = req.params.id;
+
+    if (!categoryId) {
+      return res.status(400).json({
+        success: false,
+        message: "Category ID is required",
+      });
+    }
+
+    const products = await ProductModel.find({ category: categoryId }).populate("category");
+
+    res.status(200).json({
+      success: true,
+      message: "Products fetched successfully",
+      data: products,
+    });
+  }
+);
