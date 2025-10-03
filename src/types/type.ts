@@ -5,6 +5,7 @@ export interface IUser  {
   name: string;
   username: string;
   password: string;
+  avatar: string;
   createdAt: Date;
   updatedAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;

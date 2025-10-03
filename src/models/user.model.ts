@@ -1,4 +1,9 @@
-import mongoose, { Model, Schema, model, type HydratedDocument } from "mongoose";
+import mongoose, {
+  Model,
+  Schema,
+  model,
+  type HydratedDocument,
+} from "mongoose";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
@@ -14,6 +19,7 @@ const UserSchema = new Schema<IUser>(
       type: String,
       required: true,
       trim: true,
+      tolowercase: true,
     },
 
     username: {
@@ -27,6 +33,9 @@ const UserSchema = new Schema<IUser>(
       required: true,
       trim: true,
       minlength: 8,
+    },
+    avatar: {
+      type: String,
     },
   },
   { timestamps: true }

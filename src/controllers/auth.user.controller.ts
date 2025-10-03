@@ -1,6 +1,7 @@
 import type { Request, Response } from "express";
 import asyncErrorHandler from "../utils/asyncErrorHandler.js";
 import UserModel from "../models/user.model.js";
+import { generateAvatar } from "../utils/generateAvatar.js";
 
 export const registerUser = asyncErrorHandler(
   async (req: Request, res: Response ) => {
@@ -20,7 +21,9 @@ export const registerUser = asyncErrorHandler(
         message: "User with this username already exists",
       });
     }     
-    const user = await UserModel.create({ username, password });
+    const avatar = generateAvatar();
+
+    const user = await UserModel.create({ name , username, password , avatar });
     const token = user.generateJWT();
 
      res.cookie("token", token, {
