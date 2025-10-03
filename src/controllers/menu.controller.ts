@@ -9,17 +9,12 @@ import CategoryModel from "../models/category.model.js";
 export const uploadProduct = asyncErrorHandler(
   async (req: Request, res: Response) => {
     const userId = req.userId;
-    if (!userId)
-      return res.status(401).json({
-        success: false,
-        message: "Unauthorized",
-      });
-
+    
     const isAdmin = await AdminModel.findById(userId);
     if (!isAdmin)
       return res.status(403).json({
         success: false,
-        message: "Forbidden",
+        message: "Access Denied",
       });
 
     const { name, description, categoryId, price, foodType } = req.body;
@@ -63,18 +58,11 @@ export const addCategory = asyncErrorHandler(
   async (req: Request, res: Response) => {
     const userId = req.userId;
 
-    if (!userId) {
-      return res.status(401).json({
-        success: false,
-        message: "Unauthorized",
-      });
-    }
-
     const isAdmin = await AdminModel.findById(userId);
     if (!isAdmin) {
       return res.status(403).json({
         success: false,
-        message: "Forbidden",
+        message: "Access Denied",
       });
     }
 
@@ -133,22 +121,15 @@ export const deleteCategory = asyncErrorHandler(
   async (req: Request, res: Response) => {
     const userId = req.userId;
 
-    if (!userId) {
-      return res.status(401).json({
-        success: false,
-        message: "Unauthorized",
-      });
-    }
-
     const isAdmin = await AdminModel.findById(userId);
     if (!isAdmin) {
       return res.status(403).json({
         success: false,
-        message: "Forbidden",
+        message: "Access Denied",
       });
     }
 
-    const categoryId = req.params.id;
+    const categoryId = req.params;
 
     if (!categoryId) {
       return res.status(400).json({
@@ -180,7 +161,7 @@ export const deleteCategory = asyncErrorHandler(
 );
 export const getAllProducts = asyncErrorHandler(
   async (req: Request, res: Response) => {
-    const products = await ProductModel.find().populate("category");
+    const products = await ProductModel.find().populate("category").sort({ createdAt : -1 });
 
     res.status(200).json({ 
       message : "Fetched All Products Successfully",
@@ -194,18 +175,11 @@ export const deleteProduct = asyncErrorHandler(
   async (req: Request, res: Response) => {
     const userId = req.userId;
 
-    if (!userId) {
-      return res.status(401).json({
-        success: false,
-        message: "Unauthorized",
-      });
-    }
-
     const isAdmin = await AdminModel.findById(userId);
     if (!isAdmin) {
       return res.status(403).json({
         success: false,
-        message: "Forbidden",
+        message: "Access Denied",
       });
     }
 
@@ -234,18 +208,11 @@ export const updateProduct = asyncErrorHandler(
   async (req: Request, res: Response) => {
     const userId = req.userId;
 
-    if (!userId) {
-      return res.status(401).json({
-        success: false,
-        message: "Unauthorized",
-      });
-    }
-
     const isAdmin = await AdminModel.findById(userId);
     if (!isAdmin) {
       return res.status(403).json({
         success: false,
-        message: "Forbidden",
+        message: "Access Denied",
       });
     }
 
@@ -292,5 +259,4 @@ export const updateProduct = asyncErrorHandler(
     });
   }
 );
-
 
