@@ -4,19 +4,21 @@ import type { Request, Response } from "express";
 
 export const registerAdmin = asyncErrorHandler(
   async (req: Request, res: Response) => {
-    const { name, username, password, secretKey } = req.body;
+    const { name, username, password } = req.body;
+    const userId = req.userId;
 
-    if (!name || !username || !password || !secretKey) {
-      return res.status(400).json({
-        success: false,
-        message: "Name, username, password and secret key are required",
-      });
-    }
-
-    if (secretKey !== process.env.ADMIN_SECRET_KEY) {
+    const isAdmin = AdminModel.findById(userId);
+    if (!isAdmin) {
       return res.status(403).json({
         success: false,
-        message: "Invalid secret key",
+        message: "Access Denied",
+      });
+    }
+    
+    if (!name || !username || !password ) {
+      return res.status(400).json({
+        success: false,
+        message: "Name, username, password  are required",
       });
     }
 
@@ -61,6 +63,8 @@ export const loginAdmin = asyncErrorHandler(
         message: "Invalid credentials",
       });
     }
+    admin.toObject();
+    delete admin.password;
     const token = admin.generateJWT();
     res.cookie("token", token, {
       httpOnly: true,
@@ -70,6 +74,7 @@ export const loginAdmin = asyncErrorHandler(
     res.status(200).json({
       success: true,
       message: "Admin logged in successfully",
+      data: admin,
     });
   }
 );
