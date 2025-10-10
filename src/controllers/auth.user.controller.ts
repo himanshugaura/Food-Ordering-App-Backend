@@ -69,6 +69,8 @@ export const loginUser = asyncErrorHandler(
     }
 
     const token = user.generateJWT();
+    const userObj = user.toObject();
+    delete userObj.password;
 
      res.cookie("token", token, {
       httpOnly: true,
@@ -80,6 +82,7 @@ export const loginUser = asyncErrorHandler(
     res.status(200).json({
       success: true,
       message: "User logged in successfully",
+      data: userObj,
     });
   }
 );

@@ -63,8 +63,8 @@ export const loginAdmin = asyncErrorHandler(
         message: "Invalid credentials",
       });
     }
-    admin.toObject();
-    delete admin.password;
+    const adminObj = admin.toObject();
+    delete adminObj.password;
     const token = admin.generateJWT();
     res.cookie("token", token, {
       httpOnly: true,
@@ -74,7 +74,7 @@ export const loginAdmin = asyncErrorHandler(
     res.status(200).json({
       success: true,
       message: "Admin logged in successfully",
-      data: admin,
+      data: adminObj,
     });
   }
 );

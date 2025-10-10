@@ -4,7 +4,7 @@ import type { FoodType, OrderStatus, PaymentMethod } from '../constants.js';
 export interface IUser  {
   name: string;
   username: string;
-  password: string;
+  password?: string;
   avatar: string;
   createdAt: Date;
   updatedAt: Date;
