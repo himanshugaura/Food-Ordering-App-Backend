@@ -70,7 +70,6 @@ export interface IProducts  {
 
 export interface ICategory  {
   name: string;
-  product : Types.ObjectId[];
   image : {
     publicId : string,
     url : string,

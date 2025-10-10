@@ -41,7 +41,7 @@ export const uploadProduct = asyncErrorHandler(
     await ProductModel.create({
       name,
       description,
-      categoryId,
+      category: categoryId,
       price: Number(price),
       foodType,
       image: { url, publicId },
@@ -260,6 +260,58 @@ export const updateProduct = asyncErrorHandler(
   }
 );
 
+export const updateCategory = asyncErrorHandler(
+  async (req: Request, res: Response) => {
+    const userId = req.userId;
+
+    const isAdmin = await AdminModel.findById(userId);
+    if (!isAdmin) {
+      return res.status(403).json({
+        success: false,
+        message: "Access Denied",
+      });
+    }
+
+    const categoryId = req.params.id;
+    const category = await CategoryModel.findById(categoryId);
+
+    if (!category) {
+      return res.status(404).json({
+        success: false,
+        message: "Product not found",
+      });
+    }
+
+    const { name } = req.body;
+
+    if (name) category.name = name;
+
+    if (req.file) {
+      if (category.image?.publicId) {
+        await cloudinary.uploader.destroy(category.image.publicId);
+      }
+
+      const { url, publicId } = await uploadToCloudinary(
+        req.file.buffer,
+        "category"
+      );
+
+      category.image = {
+        url,
+        publicId,
+      };
+    }
+
+    await category.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Product updated successfully",
+      data: category,
+    });
+  }
+);
+
 export const getProductsByCategory = asyncErrorHandler(
   async (req: Request, res: Response) => {
     const categoryId = req.params.id;
@@ -277,6 +329,33 @@ export const getProductsByCategory = asyncErrorHandler(
       success: true,
       message: "Products fetched successfully",
       data: products,
+    });
+  }
+);
+
+export const getProductById = asyncErrorHandler(
+  async (req: Request, res: Response) => {
+    const productId = req.params.id;
+
+    if (!productId) {
+      return res.status(400).json({
+        success: false,
+        message: "Product ID is required",
+      });
+    }
+
+    const product = await ProductModel.findById(productId).populate("category");
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: "Product not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Product fetched successfully",
+      data: product,
     });
   }
 );
