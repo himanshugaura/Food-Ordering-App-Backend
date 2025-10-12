@@ -38,7 +38,7 @@ export const uploadProduct = asyncErrorHandler(
       "products"
     );
     
-    await ProductModel.create({
+    const product = await ProductModel.create({
       name,
       description,
       category: categoryId,
@@ -46,10 +46,13 @@ export const uploadProduct = asyncErrorHandler(
       foodType,
       image: { url, publicId },
     });
+
+    await product.populate("category");
     
     res.status(201).json({
       success: true,
       message: "Product uploaded successfully",
+      data : product
     });
   }
 );
