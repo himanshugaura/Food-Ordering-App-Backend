@@ -36,6 +36,7 @@ export const registerUser = asyncErrorHandler(
     res.status(201).json({
       success: true,
       message: "User registered successfully",
+      data : user,
     });
   }
 );
