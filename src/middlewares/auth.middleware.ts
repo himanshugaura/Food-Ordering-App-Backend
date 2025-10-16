@@ -7,7 +7,7 @@ const JWT_SECRET = process.env.JWT_SECRET as string;
 export const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
 
   const token = req.cookies.token;
-
+  
   if (!token) {
     return res.status(401).json({
       success: false,
@@ -16,7 +16,7 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction) 
   }
 
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as { _id: string; phone: string };
+    const decoded = jwt.verify(token, JWT_SECRET) as { _id: string  };
     req.userId = decoded._id;
     next();
   } catch (err) {

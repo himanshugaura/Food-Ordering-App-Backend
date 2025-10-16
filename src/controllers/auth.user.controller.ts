@@ -101,10 +101,11 @@ export const logoutUser = asyncErrorHandler(
   }
 );
 
-export const getUserProfile = asyncErrorHandler(
-  async (req: Request, res: Response ) => {
-    const userId = req.userId;
 
+export const getUserProfile = asyncErrorHandler(
+  async (req: Request, res: Response) => {
+    const userId = req.userId;
+    
     const user = await UserModel.findById(userId).select("-password");
     if (!user) {
       return res.status(404).json({
@@ -115,7 +116,7 @@ export const getUserProfile = asyncErrorHandler(
 
     res.status(200).json({
       success: true,
-      data : user,
+      data: user,
     });
   }
 );
