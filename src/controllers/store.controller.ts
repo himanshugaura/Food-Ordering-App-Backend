@@ -4,6 +4,8 @@ import type { Request, Response } from "express";
 import StoreModel from "../models/store.model.js";
 import { uploadToCloudinary } from "../utils/uploadToCloudinary.js";
 import cloudinary from "../config/cloudinary.js";
+import { emit } from "process";
+import { emitStoreStatusUpdated } from "../socket.js";
 
 export const createStore = asyncErrorHandler(
   async (req: Request, res: Response) => {
@@ -142,6 +144,8 @@ export const toggleStoreStatus = asyncErrorHandler(
 
     store.isOpen = !store.isOpen;
     await store.save();
+
+    emitStoreStatusUpdated();
 
     res.status(200).json({
       success: true,

@@ -1,9 +1,12 @@
 import { Server } from "socket.io";
 import { Server as HttpServer } from "http";
+import StoreModel from "./models/store.model.js";
+import type { IStore } from "./types/type.js";
 
 interface ServerToClientEvents {
   placeOrder: (payload: { data: any; message: string }) => void;
   orderUpdated: (payload: { data: any; message: string }) => void;
+  statusUpdated: (payload: { data: any; message: string }) => void;
 }
 
 interface ClientToServerEvents {
@@ -52,6 +55,15 @@ export const emitOrderUpdated = (order: any) => {
     message: `Order #${order.orderNo} status updated to ${order.status}`,
   });
 };
+
+export const emitStoreStatusUpdated = async () => {
+  const storeRoom = `store:status`;
+  const status = await StoreModel.findOne();
+  io.to(storeRoom).emit("statusUpdated", {
+    data : status?.isOpen,
+    message: `Store status updated to ${status?.isOpen ? "Open" : "Closed"}`,
+  });
+}
 
 export const getIO = () => {
   if (!io) throw new Error("Socket.io not initialized!");
