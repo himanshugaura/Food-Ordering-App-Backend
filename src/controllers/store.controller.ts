@@ -4,7 +4,6 @@ import type { Request, Response } from "express";
 import StoreModel from "../models/store.model.js";
 import { uploadToCloudinary } from "../utils/uploadToCloudinary.js";
 import cloudinary from "../config/cloudinary.js";
-import { emit } from "process";
 import { emitStoreStatusUpdated } from "../socket.js";
 
 export const createStore = asyncErrorHandler(
@@ -56,16 +55,6 @@ export const createStore = asyncErrorHandler(
 
 export const getStoreDetails = asyncErrorHandler(
   async (req: Request, res: Response) => {
-    const userId = req.userId;
-
-   const isAdmin = await AdminModel.findById(userId);
-    if (!isAdmin) {
-      return res.status(403).json({
-        success: false,
-        message: "Access Denied",
-      });
-    }
-
     const store = await StoreModel.findOne();
     if (!store) {
       return res.status(404).json({
