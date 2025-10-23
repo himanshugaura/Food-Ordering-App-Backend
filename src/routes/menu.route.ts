@@ -19,11 +19,11 @@ menuRouter.post(
   addCategory              
 );
 
-menuRouter.get("/get-categories" , authMiddleware , getAllCategories);
-menuRouter.get("/get-products" , authMiddleware , getAllProducts); 
+menuRouter.get("/get-categories" ,  getAllCategories);
+menuRouter.get("/get-products" , getAllProducts); 
 menuRouter.get("/get-product/:id" , authMiddleware , getProductById); 
 menuRouter.get("/get-category/:id" , authMiddleware , getCategoryById);
-menuRouter.get("/get-products-by-category/:id" , authMiddleware , getProductsByCategory);
+menuRouter.get("/get-products-by-category/:id"  , getProductsByCategory);
 menuRouter.delete("/delete/product/:id" , authMiddleware , deleteProduct);menuRouter.delete("/delete/category/:id" , authMiddleware , deleteCategory);
 menuRouter.patch("/update/product/:id" , authMiddleware , upload.single("image") , updateProduct);
 menuRouter.patch("/update/category/:id" , authMiddleware , upload.single("image") , updateCategory);
