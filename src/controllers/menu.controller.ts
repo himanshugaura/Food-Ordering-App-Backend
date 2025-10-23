@@ -390,3 +390,27 @@ export const getProductById = asyncErrorHandler(
     });
   }
 );
+
+export const getProductsByIds = asyncErrorHandler(
+  async (req: Request, res: Response) => {
+    const { productIds } = req.body;
+    
+    if (!productIds || !Array.isArray(productIds) || productIds.length === 0) {   
+      return res.status(400).json({
+        success: false,
+        message: "Product IDs are required",
+      });
+    }
+
+    const products = await ProductModel.find({
+      _id: { $in: productIds },
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Products fetched successfully",
+      data: products,
+    });
+  }
+);
+ 
