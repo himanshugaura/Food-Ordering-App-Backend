@@ -1,5 +1,5 @@
 import express from "express"; 
-import { addCategory, deleteCategory, deleteProduct, getAllCategories, getAllProducts, getCategoryById, getProductById, getProductsByCategory, updateCategory, updateProduct, uploadProduct } from "../controllers/menu.controller.js";
+import { addCategory, deleteCategory, deleteProduct, getAllCategories, getAllProducts, getCategoryById, getProductById, getProductsByCategory, getProductsByIds, updateCategory, updateProduct, uploadProduct } from "../controllers/menu.controller.js";
 import { upload } from "../middlewares/upload.js";
 import { authMiddleware } from "../middlewares/auth.middleware.js";
 
@@ -27,5 +27,6 @@ menuRouter.get("/get-products-by-category/:id"  , getProductsByCategory);
 menuRouter.delete("/delete/product/:id" , authMiddleware , deleteProduct);menuRouter.delete("/delete/category/:id" , authMiddleware , deleteCategory);
 menuRouter.patch("/update/product/:id" , authMiddleware , upload.single("image") , updateProduct);
 menuRouter.patch("/update/category/:id" , authMiddleware , upload.single("image") , updateCategory);
+menuRouter.post("/get-products-by-ids" , getProductsByIds);
 
 export default menuRouter;
