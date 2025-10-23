@@ -6,10 +6,6 @@ export interface IUser  {
   username: string;
   password?: string;
   avatar: string;
-  cart: {
-    product: Types.ObjectId;  
-    quantity: number;        
-  }[];
   createdAt: Date;
   updatedAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
