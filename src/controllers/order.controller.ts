@@ -4,57 +4,139 @@ import { generateOrderNo } from "../utils/generateOrderNo.js";
 import OrderModel from "../models/order.model.js";
 import StoreModel from "../models/store.model.js";
 import { configDotenv } from "dotenv";
-import { OrderStatus } from "../constants.js";
+import { OrderStatus, PaymentMethod } from "../constants.js";
 import UserModel from "../models/user.model.js";
 import AdminModel from "../models/admin.model.js";
+import ProductModel from "../models/product.model.js";
+import { razorpayInstance } from "../config/razorpay.js";
 configDotenv();
+async function createOrderHandler({
+  userId,
+  orderItems,
+  paymentMethod,
+}: {
+  userId: string;
+  orderItems: any[];
+  paymentMethod: PaymentMethod;
+}) {
+  const store = await StoreModel.findOne();
+  if (!store?.isOpen) {
+    throw new Error("Store is currently closed. Cannot place order.");
+  }
 
-export const createOrder = asyncErrorHandler(
+  if (!orderItems?.length) {
+    throw new Error("Order items are required.");
+  }
+
+  const orderItemsWithPrice = await Promise.all(
+    orderItems.map(async (item) => {
+      const product = await ProductModel.findById(item.product);
+      if (!product) throw new Error(`Product not found: ${item.product}`);
+      return {
+        product: item.product,
+        quantity: item.quantity,
+        price: product.price,
+      };
+    })
+  );
+
+  const totalAmount = orderItemsWithPrice.reduce(
+    (sum, item) => sum + item.price * item.quantity,
+    0
+  );
+
+  const orderNo = await generateOrderNo();
+  const order = await OrderModel.create({
+    user: userId,
+    orderNo,
+    orderItems: orderItemsWithPrice.map(({ product, quantity }) => ({
+      product,
+      quantity,
+    })),
+    totalAmount,
+    paymentMethod,
+    isPaid: false,
+    status: OrderStatus.PENDING,
+  });
+
+  let razorpayOrderId: string | undefined;
+  if (paymentMethod === PaymentMethod.Online) {
+    const rOrder = await razorpayInstance.orders.create({
+      amount: totalAmount * 100,
+      currency: "INR",
+      receipt: `rec_${orderNo}`,
+      notes: {
+        orderId: order._id.toString(), 
+      },
+    });
+    order.razorpayOrderId = rOrder.id;
+    razorpayOrderId = rOrder.id; 
+    await order.save();
+  }
+
+  return { order, razorpayOrderId, totalAmount };
+}
+
+export const createCashOrder = asyncErrorHandler(
+  async (req: Request, res: Response) => {
+    const userId = req.userId;
+    const { orderItems } = req.body;
+    if (!userId) {
+      return res
+        .status(401)
+        .json({ success: false, message: "User not authenticated" });
+    }
+
+    const { order } = await createOrderHandler({
+      userId,
+      orderItems,
+      paymentMethod: PaymentMethod.Cash,
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: "Cash order placed successfully.",
+      data: { orderId: order._id, orderNo: order.orderNo },
+    });
+  }
+);
+
+export const createOnlineOrder = asyncErrorHandler(
   async (req: Request, res: Response) => {
     const userId = req.userId;
     const { orderItems } = req.body;
 
-    const store = await StoreModel.findOne();
-    if (!store) {
-      return res.status(404).json({
-        success: false,
-        message: "Store not found",
-      });
+    if (!userId) {
+      return res
+        .status(401)
+        .json({ success: false, message: "User not authenticated" });
     }
 
-    if (store.isOpen === false) {
-      return res.status(403).json({
-        success: false,
-        message: "Store is currently closed. Cannot place order.",
-      });
-    }
-
-    if (!orderItems || orderItems.length === 0) {
-      return res.status(400).json({
-        success: false,
-        message: "Order items are required",
-      });
-    }
-
-    const orderNo = await generateOrderNo();
-
-    const order = await OrderModel.create({
+    const { order, razorpayOrderId, totalAmount } = await createOrderHandler({
       userId,
-      orderNo,
       orderItems,
+      paymentMethod: PaymentMethod.Online,
     });
 
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
-      message: "Order created successfully",
-      data: order,
+      message: "Online order created successfully.",
+      data: {
+        orderId: order._id,
+        orderNo: order.orderNo,
+        razorpayOrderId, 
+        totalAmount,
+      },
     });
   }
 );
 
 export const getPendingOrders = asyncErrorHandler(
   async (req: Request, res: Response) => {
-    const orders = await OrderModel.find({ status: OrderStatus.PENDING }).populate("user", "name avatar").populate("orderItems.product", "name image foodType").sort({ createdAt: -1 });
+    const orders = await OrderModel.find({ status: OrderStatus.PENDING })
+      .populate("user", "name avatar")
+      .populate("orderItems.product", "name image foodType")
+      .sort({ createdAt: -1 });
 
     res.status(200).json({
       success: true,
@@ -107,7 +189,9 @@ export const getMonthlyOrders = asyncErrorHandler(
     })
       .sort({ createdAt: -1 })
       .skip(skip)
-      .limit(limitNum).populate("user", "name avatar").populate("orderItems.product", "name image foodType");
+      .limit(limitNum)
+      .populate("user", "name avatar")
+      .populate("orderItems.product", "name image foodType");
 
     const totalOrders = await OrderModel.countDocuments({
       createdAt: { $gte: startDate, $lt: endDate },
@@ -134,7 +218,13 @@ export const getOrderByDate = asyncErrorHandler(
     const pageNum = parseInt(page as string, 10);
     const limitNum = parseInt(limit as string, 10);
 
-    if (!date || isNaN(pageNum) || isNaN(limitNum) || pageNum < 1 || limitNum < 1) {
+    if (
+      !date ||
+      isNaN(pageNum) ||
+      isNaN(limitNum) ||
+      pageNum < 1 ||
+      limitNum < 1
+    ) {
       return res.status(400).json({
         success: false,
         message: "Date (YYYY-MM-DD), page, and limit are required",
@@ -149,15 +239,35 @@ export const getOrderByDate = asyncErrorHandler(
       });
     }
 
-    const startOfDay = new Date(Date.UTC(dateObj.getUTCFullYear(), dateObj.getUTCMonth(), dateObj.getUTCDate(), 0, 0, 0));
-    const endOfDay = new Date(Date.UTC(dateObj.getUTCFullYear(), dateObj.getUTCMonth(), dateObj.getUTCDate() + 1, 0, 0, 0));
+    const startOfDay = new Date(
+      Date.UTC(
+        dateObj.getUTCFullYear(),
+        dateObj.getUTCMonth(),
+        dateObj.getUTCDate(),
+        0,
+        0,
+        0
+      )
+    );
+    const endOfDay = new Date(
+      Date.UTC(
+        dateObj.getUTCFullYear(),
+        dateObj.getUTCMonth(),
+        dateObj.getUTCDate() + 1,
+        0,
+        0,
+        0
+      )
+    );
 
     const orders = await OrderModel.find({
       createdAt: { $gte: startOfDay, $lt: endOfDay },
     })
       .sort({ createdAt: -1 })
       .skip((pageNum - 1) * limitNum)
-      .limit(limitNum).populate("user", "name avatar").populate("orderItems.product", "name image foodType");
+      .limit(limitNum)
+      .populate("user", "name avatar")
+      .populate("orderItems.product", "name image foodType");
 
     const totalOrders = await OrderModel.countDocuments({
       createdAt: { $gte: startOfDay, $lt: endOfDay },
@@ -190,7 +300,9 @@ export const getOrdersByCustomerName = asyncErrorHandler(
       });
     }
 
-    const user = await UserModel.findOne({ name: name.toString().trim().toLocaleLowerCase() });
+    const user = await UserModel.findOne({
+      name: name.toString().trim().toLocaleLowerCase(),
+    });
     if (!user) {
       return res.status(404).json({
         success: false,
@@ -201,7 +313,7 @@ export const getOrdersByCustomerName = asyncErrorHandler(
     const skip = (page - 1) * limit;
 
     const orders = await OrderModel.find({ user: user._id })
-      .populate("user", "name username avatar") 
+      .populate("user", "name username avatar")
       .populate("orderItems.product", "name image foodType")
       .sort({ createdAt: -1 })
       .skip(skip)
@@ -225,8 +337,8 @@ export const getOrdersByCustomerName = asyncErrorHandler(
 
 export const acceptOrder = asyncErrorHandler(
   async (req: Request, res: Response) => {
-     const userId = req.userId;
-    const  orderId  = req.params.id;
+    const userId = req.userId;
+    const orderId = req.params.id;
 
     const isAdmin = await AdminModel.findById(userId);
     if (!isAdmin) {
@@ -324,6 +436,30 @@ export const markOrderAsDelivered = asyncErrorHandler(
     res.status(200).json({
       success: true,
       message: "Order marked as delivered successfully",
+    });
+  }
+);
+
+export const getPendingOrderByUser = asyncErrorHandler(
+  async (req: Request, res: Response) => {
+    const userId = req.params.id;
+
+    const order = await OrderModel.findOne({
+      user: userId,
+      status: OrderStatus.PENDING,
+    }).populate("orderItems.product", "name image foodType");
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "No pending order found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Pending order fetched successfully",
+      data: order,
     });
   }
 );

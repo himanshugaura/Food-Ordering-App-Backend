@@ -7,8 +7,9 @@ import StoreModel from "../models/store.model.js";
  */
 export async function generateOrderNo(): Promise<number> {
   const store = await StoreModel.findOneAndUpdate(
+    {}, 
     { $inc: { orderCounter: 1 } }, 
-    { new: true }                    
+    { new: true } 
   );
 
   if (!store) throw new Error("Store not found");

@@ -8,6 +8,7 @@ import productRouter from "./routes/menu.route.js";
 import orderRouter from "./routes/order.route.js";
 import userRouter from "./routes/user.route.js";
 import storeRouter from "./routes/store.route.js";
+import razorpayRouter from "./routes/razorpay.route.js";
 async function startServer() {
   dotenv.config();
 
@@ -45,6 +46,7 @@ async function startServer() {
   app.use("/api/menu", productRouter);
   app.use("/api/order", orderRouter);
   app.use("/api/store", storeRouter);
+ app.use ("/api", razorpayRouter);
 
 
   app.listen(PORT, () => {

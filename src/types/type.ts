@@ -37,8 +37,7 @@ export interface IStore {
 
 export interface IOrderItem {
   product: Types.ObjectId;   
-  quantity: number;          
-  price: number;             
+  quantity: number;                       
 }
 
 export interface IOrders  {
@@ -49,6 +48,8 @@ export interface IOrders  {
   status: OrderStatus;
   paymentMethod : PaymentMethod;
   isPaid : Boolean;
+  razorpayOrderId?: string;
+  razorpayPaymentId?: string;
   createdAt: Date;
   updatedAt: Date;
 }
