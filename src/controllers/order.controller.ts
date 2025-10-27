@@ -66,11 +66,11 @@ async function createOrderHandler({
       currency: "INR",
       receipt: `rec_${orderNo}`,
       notes: {
-        orderId: order._id.toString(), 
+        orderId: order._id.toString(),
       },
     });
     order.razorpayOrderId = rOrder.id;
-    razorpayOrderId = rOrder.id; 
+    razorpayOrderId = rOrder.id;
     await order.save();
   }
 
@@ -124,7 +124,7 @@ export const createOnlineOrder = asyncErrorHandler(
       data: {
         orderId: order._id,
         orderNo: order.orderNo,
-        razorpayOrderId, 
+        razorpayOrderId,
         totalAmount,
       },
     });
@@ -135,7 +135,7 @@ export const getPendingOrders = asyncErrorHandler(
   async (req: Request, res: Response) => {
     const orders = await OrderModel.find({ status: OrderStatus.PENDING })
       .populate("user", "name avatar")
-      .populate("orderItems.product", "name image foodType")
+      .populate("orderItems.product", "name image foodType price")
       .sort({ createdAt: -1 });
 
     res.status(200).json({
@@ -385,12 +385,12 @@ export const rejectOrder = asyncErrorHandler(
       });
     }
 
-    if (order.status !== OrderStatus.PENDING) {
+    if (order.status !== OrderStatus.PENDING && order.status !== OrderStatus.COOKING) {
       return res.status(400).json({
         success: false,
-        message: "Only pending orders can be rejected",
+        message: "Only  pending / cooking orders can be rejected",
       });
-    }
+    } 
 
     order.status = OrderStatus.CANCELLED;
     await order.save();
@@ -405,7 +405,7 @@ export const rejectOrder = asyncErrorHandler(
 export const markOrderAsDelivered = asyncErrorHandler(
   async (req: Request, res: Response) => {
     const userId = req.userId;
-    const { orderId } = req.params;
+    const orderId  = req.params.id;
 
     const isAdmin = await AdminModel.findById(userId);
     if (!isAdmin) {
@@ -431,6 +431,7 @@ export const markOrderAsDelivered = asyncErrorHandler(
     }
 
     order.status = OrderStatus.DELIVERED;
+    order.isPaid = true;
     await order.save();
 
     res.status(200).json({
@@ -442,12 +443,12 @@ export const markOrderAsDelivered = asyncErrorHandler(
 
 export const getPendingOrderByUser = asyncErrorHandler(
   async (req: Request, res: Response) => {
-    const userId = req.params.id;
+    const userId = req.userId;
 
-    const order = await OrderModel.findOne({
+    const order = await OrderModel.find({
       user: userId,
-      status: OrderStatus.PENDING,
-    }).populate("orderItems.product", "name image foodType");
+      status: { $in: [OrderStatus.PENDING , OrderStatus.COOKING ] },
+    }).populate("orderItems.product", "name image foodType price").sort({ createdAt: -1 });
 
     if (!order) {
       return res.status(404).json({
@@ -460,6 +461,59 @@ export const getPendingOrderByUser = asyncErrorHandler(
       success: true,
       message: "Pending order fetched successfully",
       data: order,
+    });
+  }
+);
+
+  export const getOrdersByCustomer = asyncErrorHandler(
+    async (req: Request, res: Response) => {
+      const userId = req.userId;
+
+      const month = parseInt(req.query.month as string); 
+      const currentYear = new Date().getFullYear();
+
+      if (isNaN(month) || month < 1 || month > 12) {
+        res.status(400).json({
+          success: false,
+          message: "Invalid month parameter",
+        });
+        return;
+      }
+
+      const startDate = new Date(currentYear, month - 1, 1);
+      const endDate = new Date(currentYear, month, 1);
+
+      const orders = await OrderModel.find({
+        user: userId,
+        createdAt: { $gte: startDate, $lt: endDate },
+        status: { $nin: [OrderStatus.PENDING ,   OrderStatus.COOKING]},
+      })
+        .populate("user", "name username avatar")
+        .populate("orderItems.product", "name image foodType price")
+        .sort({ createdAt: -1 });
+      
+      res.status(200).json({
+        success: true,
+        message: `Orders fetched successfully`,
+        data: orders,
+      });
+    }
+  );
+
+export const getAllAcceptedOrders = asyncErrorHandler(
+  async (req: Request, res: Response) => {
+
+    const orders = await OrderModel.find({
+      status:  OrderStatus.COOKING 
+    })
+      .populate("user", "name username avatar")
+      .populate("orderItems.product", "name image foodType price")
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      message: `Accepted orders fetched successfully`,
+      data: orders,
     });
   }
 );
