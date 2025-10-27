@@ -127,6 +127,12 @@ export const createOnlineOrder = asyncErrorHandler(
       paymentMethod: PaymentMethod.Online,
     });
 
+    const populatedOrder = await OrderModel.findById(order._id)
+  .populate("user", "name avatar")
+  .populate("orderItems.product", "name image foodType price");
+
+emitPlaceOrder(populatedOrder);
+
     return res.status(201).json({
       success: true,
       message: "Online order created successfully.",
