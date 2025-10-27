@@ -17,7 +17,7 @@ async function startServer() {
   const app = express();
   const PORT = process.env.PORT || 3030;
   const server = http.createServer(app);
-  const whitelist = process.env.CORS_ORIGIN?.split(",") || ["http://localhost:3000"];
+  const whitelist = process.env.CORS_ORIGIN?.split(",").map(o => o.trim()) || ["http://localhost:3000"];
 
   // Middleware
   app.use(cookieParser());
@@ -27,21 +27,21 @@ async function startServer() {
   // DB connect
   await dbConnect();
 
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin || whitelist.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    credentials: true,
+  })
+);
 
-  // Production CORS setup
-  app.use(
-    cors({
-      origin: (origin, callback) => {
-        if (!origin || whitelist.indexOf(origin) !== -1) {
-          callback(null, true);
-        } else {
-          callback(new Error("Not allowed by CORS"));
-        }
-      },
-      methods: ["GET", "POST", "PUT", "PATCH","DELETE"],
-      credentials: true,
-    })
-  );
+
 
   // Routes
   app.use("/api/admin/auth", adminAuthRouter);
