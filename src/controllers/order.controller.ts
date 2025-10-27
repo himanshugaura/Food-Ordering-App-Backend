@@ -9,6 +9,7 @@ import UserModel from "../models/user.model.js";
 import AdminModel from "../models/admin.model.js";
 import ProductModel from "../models/product.model.js";
 import { razorpayInstance } from "../config/razorpay.js";
+import { emitPlaceOrder } from "../socket.js";
 configDotenv();
 async function createOrderHandler({
   userId,
@@ -93,12 +94,14 @@ export const createCashOrder = asyncErrorHandler(
       paymentMethod: PaymentMethod.Cash,
     });
 
+    emitPlaceOrder(order.populate("user", "name avatar").populate("orderItems.product", "name image foodType price"));
+
     return res.status(201).json({
       success: true,
       message: "Cash order placed successfully.",
       data: { orderId: order._id, orderNo: order.orderNo },
     });
-  }
+  } 
 );
 
 export const createOnlineOrder = asyncErrorHandler(

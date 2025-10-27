@@ -57,13 +57,17 @@ export const emitOrderUpdated = (order: any) => {
 };
 
 export const emitStoreStatusUpdated = async () => {
-  const storeRoom = `store:status`;
-  const status = await StoreModel.findOne();
-  io.to(storeRoom).emit("statusUpdated", {
-    data : status?.isOpen,
-    message: `Store status updated to ${status?.isOpen ? "Open" : "Closed"}`,
-  });
-}
+  try {
+    const storeRoom = `store:status`;
+    const status = await StoreModel.findOne();
+    io.to(storeRoom).emit("statusUpdated", {
+      data : status?.isOpen,
+      message: `Store status updated to ${status?.isOpen ? "Open" : "Closed"}`,
+    });
+  } catch (error) {
+    console.error("[emitStoreStatusUpdated] Error:", error);
+  }
+};
 
 export const getIO = () => {
   if (!io) throw new Error("Socket.io not initialized!");

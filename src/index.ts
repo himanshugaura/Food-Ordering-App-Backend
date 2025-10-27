@@ -9,11 +9,14 @@ import orderRouter from "./routes/order.route.js";
 import userRouter from "./routes/user.route.js";
 import storeRouter from "./routes/store.route.js";
 import razorpayRouter from "./routes/razorpay.route.js";
+import { initSocket } from "./socket.js";
+import http from "http";
 async function startServer() {
   dotenv.config();
 
   const app = express();
   const PORT = process.env.PORT || 3030;
+  const server = http.createServer(app);
   const whitelist = process.env.CORS_ORIGIN?.split(",") || ["http://localhost:3000"];
 
   // Middleware
@@ -48,8 +51,8 @@ async function startServer() {
   app.use("/api/store", storeRouter);
  app.use ("/api", razorpayRouter);
 
-
-  app.listen(PORT, () => {
+  initSocket(server);
+  server.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT} in ${process.env.NODE_ENV} mode`);
   });
 }
