@@ -94,7 +94,13 @@ export const createCashOrder = asyncErrorHandler(
       paymentMethod: PaymentMethod.Cash,
     });
 
-    emitPlaceOrder(order.populate("user", "name avatar").populate("orderItems.product", "name image foodType price"));
+    const populatedOrder = await OrderModel.findById(order._id)
+  .populate("user", "name avatar")
+  .populate("orderItems.product", "name image foodType price");
+
+emitPlaceOrder(populatedOrder);
+
+
 
     return res.status(201).json({
       success: true,
