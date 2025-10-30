@@ -214,7 +214,7 @@ export const getStoreStatus = asyncErrorHandler(
     res.status(200).json({
       success: true,
       message: "Store status fetched successfully",
-      data: { isOpen: store.isOpen },
+      data: store.isOpen,
     });
   }
 );

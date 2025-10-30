@@ -58,7 +58,7 @@ export const emitOrderUpdated = (order: any) => {
 
 export const emitStoreStatusUpdated = async () => {
   try {
-    const storeRoom = `store:status`;
+    const storeRoom = `storeStatus`;
     const status = await StoreModel.findOne();
     io.to(storeRoom).emit("statusUpdated", {
       data : status?.isOpen,
