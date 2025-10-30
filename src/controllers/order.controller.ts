@@ -160,26 +160,24 @@ export const getPendingOrders = asyncErrorHandler(
     });
   }
 );
-
 export const getMonthlyOrders = asyncErrorHandler(
   async (req: Request, res: Response) => {
-    const { month, year, page = "1", limit = "10" } = req.query;
+    const { month, page = "1", limit = "10" } = req.query;
 
-    if (!month || !year) {
+    if (!month) {
       return res.status(400).json({
         success: false,
-        message: "Month and year are required",
+        message: "Month required",
       });
     }
 
     const monthNum = parseInt(month as string);
-    const yearNum = parseInt(year as string);
     const pageNum = parseInt(page as string);
     const limitNum = parseInt(limit as string);
+    const yearNum = new Date().getUTCFullYear(); 
 
     if (
       isNaN(monthNum) ||
-      isNaN(yearNum) ||
       monthNum < 1 ||
       monthNum > 12 ||
       isNaN(pageNum) ||
@@ -189,7 +187,7 @@ export const getMonthlyOrders = asyncErrorHandler(
     ) {
       return res.status(400).json({
         success: false,
-        message: "Invalid month, year, page or limit",
+        message: "Invalid month, page, or limit",
       });
     }
 
@@ -198,7 +196,6 @@ export const getMonthlyOrders = asyncErrorHandler(
 
     const skip = (pageNum - 1) * limitNum;
 
-    // Fetch orders with pagination
     const orders = await OrderModel.find({
       createdAt: { $gte: startDate, $lt: endDate },
     })
@@ -210,6 +207,7 @@ export const getMonthlyOrders = asyncErrorHandler(
 
     const totalOrders = await OrderModel.countDocuments({
       createdAt: { $gte: startDate, $lt: endDate },
+      status: OrderStatus.DELIVERED,
     });
 
     res.status(200).json({
@@ -225,6 +223,70 @@ export const getMonthlyOrders = asyncErrorHandler(
     });
   }
 );
+
+export const getMonthlyStats = asyncErrorHandler(
+  async (req: Request, res: Response) => {
+    const { month } = req.query;
+
+    if (!month) {
+      return res.status(400).json({
+        success: false,
+        message: "Month is required",
+      });
+    }
+
+    const monthNum = parseInt(month as string);
+    const yearNum = new Date().getUTCFullYear(); 
+
+    if (isNaN(monthNum) || monthNum < 1 || monthNum > 12) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid month value",
+      });
+    }
+
+    const startDate = new Date(Date.UTC(yearNum, monthNum - 1, 1, 0, 0, 0));
+    const endDate = new Date(Date.UTC(yearNum, monthNum, 1, 0, 0, 0));
+
+    const totalOrdersCreated = await OrderModel.countDocuments({
+      createdAt: { $gte: startDate, $lt: endDate },
+    });
+
+    const totalDeliveredOrders = await OrderModel.countDocuments({
+      createdAt: { $gte: startDate, $lt: endDate },
+      status: OrderStatus.DELIVERED,
+    });
+
+    const revenueAgg = await OrderModel.aggregate([
+      {
+        $match: {
+          createdAt: { $gte: startDate, $lt: endDate },
+          status: OrderStatus.DELIVERED,
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          totalRevenue: { $sum: "$totalAmount" },
+        },
+      },
+    ]);
+
+    const totalRevenue =
+      revenueAgg.length > 0 ? revenueAgg[0].totalRevenue : 0;
+
+    res.status(200).json({
+      success: true,
+      message: `Monthly stats for ${monthNum}/${yearNum} fetched successfully`,
+      data: {
+        totalOrders: totalOrdersCreated,
+        ordersDelivered: totalDeliveredOrders,
+        totalRevenue: totalRevenue,
+      },
+    });
+  }
+);
+
 
 export const getOrderByDate = asyncErrorHandler(
   async (req: Request, res: Response) => {
